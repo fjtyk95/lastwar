@@ -22,10 +22,57 @@
       font-size: 48px;
       display: none;
     }
+    #pauseButton {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.3);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #pauseMenu {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      display: none;
+      z-index: 200;
+    }
+    #pauseMenu button {
+      background: #4CAF50;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      font-size: 20px;
+      margin: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #pauseMenu button:hover {
+      background: #45a049;
+    }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
+  <button id="pauseButton">⏸</button>
+  <div id="pauseMenu">
+    <h2 style="color: white; margin-bottom: 20px;">一時停止中</h2>
+    <button id="resumeButton">再開</button>
+  </div>
   <div id="gameOver">Game Over</div>
   <script>
     // キャンバス初期化
@@ -52,6 +99,7 @@
       radius: 60, // さらに大きく（直径120px）
       isDragging: false
     };
+    let isPaused = false;
 
     // 敵オブジェクト
     class Enemy {
@@ -146,14 +194,38 @@
       enemies.push(new Enemy(x, y, radius, hp, speedY));
     }
 
-    // ゲームループ
+    // ポーズ関連の処理を追加
+    const pauseButton = document.getElementById('pauseButton');
+    const pauseMenu = document.getElementById('pauseMenu');
+    const resumeButton = document.getElementById('resumeButton');
+
+    pauseButton.addEventListener('click', function() {
+      isPaused = true;
+      pauseMenu.style.display = 'block';
+    });
+
+    resumeButton.addEventListener('click', function() {
+      isPaused = false;
+      pauseMenu.style.display = 'none';
+      lastFrameTime = performance.now(); // フレーム時間をリセット
+      requestAnimationFrame(gameLoop);
+    });
+
+    // ゲームループを修正
     let lastFrameTime = performance.now();
     function gameLoop(timestamp) {
-      const deltaTime = timestamp - lastFrameTime;
-      lastFrameTime = timestamp;
-      if (!gameOver) {
+      if (gameOver) {
+        document.getElementById('gameOver').style.display = 'block';
+        return;
+      }
+      
+      if (!isPaused) {
+        const deltaTime = timestamp - lastFrameTime;
+        lastFrameTime = timestamp;
+        
         update(deltaTime);
         draw();
+        
         if (timestamp - lastEnemySpawnTime > enemySpawnInterval) {
           spawnEnemy();
           lastEnemySpawnTime = timestamp;
@@ -197,7 +269,7 @@
       });
 
       // 新しい弾を発射（一定間隔で）
-      if (!gameOver && performance.now() % 200 < 16) { // 約200msごとに発射
+      if (!gameOver && !isPaused && performance.now() % 200 < 16) {
         bullets.push(new Bullet(player.x, player.y));
       }
 
