@@ -246,10 +246,9 @@
           spawnEnemy();
           lastEnemySpawnTime = timestamp;
         }
-        requestAnimationFrame(gameLoop);
       }
+      requestAnimationFrame(gameLoop);
     }
-    requestAnimationFrame(gameLoop);
 
     // プレイヤーの初期位置を設定
     function resetPlayerPosition() {
@@ -358,11 +357,30 @@
       player.isDragging = false;
     });
 
-    // スタートボタンの処理
+    // スタートボタンの処理を修正
     document.getElementById('startButton').addEventListener('click', function() {
-      document.getElementById('titleScreen').style.display = 'none';
-      isGameStarted = true;
+      // ゲーム状態のリセット
+      enemies = [];
+      bullets = [];
+      totalDamage = 0;
+      gameOver = false;
+      isPaused = false;
       gameTime = 0;
+      difficultyLevel = 1;
+      lastEnemySpawnTime = 0;
+      
+      // スコア表示のリセット
+      document.getElementById('score').textContent = 'Damage: 0';
+      document.getElementById('gameOver').style.display = 'none';
+      
+      // プレイヤーの位置をリセット
+      resetPlayerPosition();
+      
+      // タイトル画面を非表示
+      document.getElementById('titleScreen').style.display = 'none';
+      
+      // ゲーム開始
+      isGameStarted = true;
       lastFrameTime = performance.now();
       requestAnimationFrame(gameLoop);
     });
