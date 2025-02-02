@@ -104,14 +104,15 @@
     #powerUpNotification {
       position: absolute;
       left: 50%;
-      top: 30%;
+      top: 40%;
       transform: translate(-50%, -50%);
-      font-size: 36px;
+      font-size: 48px;
       color: white;
-      text-shadow: 0 0 15px #00ffff;
+      text-shadow: 0 0 20px #00ffff;
       opacity: 0;
-      transition: opacity 0.3s;
+      transition: all 0.5s;
       z-index: 100;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -370,7 +371,12 @@
     // プレイヤーの初期位置を設定
     function resetPlayerPosition() {
       player.x = canvas.width / 2;
-      player.y = canvas.height - 120; // 画面下部の位置も調整
+      player.y = canvas.height - 100;
+      player.width = player.baseWidth;
+      player.height = 90;
+      player.powerLevel = 1;
+      player.shotCount = 1;
+      player.isDragging = false;
     }
     resetPlayerPosition();
     window.addEventListener('resize', resetPlayerPosition);
@@ -435,8 +441,8 @@
           // 敵との当たり判定
           for (let enemy of enemies) {
             if (bullet.checkCollision(enemy)) {
-              const damage = Math.min(bullet.damage, enemy.hp);
-              enemy.hp -= bullet.damage;
+              const damage = bullet.damage * player.powerLevel;
+              enemy.hp -= damage;
               totalDamage += damage;
               document.getElementById('score').textContent = 'Damage: ' + Math.floor(totalDamage);
               isActive = false;
@@ -448,17 +454,10 @@
             for (let powerUp of powerUps) {
               if (bullet.checkCollision(powerUp)) {
                 powerUp.hp -= bullet.damage;
-                if (powerUp.hp <= 0) {
-                  if (powerUp.type === PowerUpType.DAMAGE) {
-                    player.powerLevel = Math.min(5, player.powerLevel + 1);
-                  } else {
-                    player.shotCount = Math.min(player.maxShotCount, player.shotCount + 1);
-                    player.width = player.baseWidth * player.shotCount;
-                  }
-                  powerUps = powerUps.filter(p => p !== powerUp);
+                if (applyPowerUp(powerUp)) {
+                  isActive = false;
+                  break;
                 }
-                isActive = false;
-                break;
               }
             }
           }
@@ -706,35 +705,57 @@
     }
 
     // パワーアップ効果適用時の処理を修正
-    if (powerUp.hp <= 0) {
-      if (powerUp.type === PowerUpType.DAMAGE) {
-        player.powerLevel = Math.min(5, player.powerLevel + 1);
-        powerUpEffects.push(new PowerUpEffect(
-          powerUp.x,
-          powerUp.y,
-          PowerUpType.DAMAGE,
-          player.powerLevel
-        ));
-        showPowerUpNotification(PowerUpType.DAMAGE);
-      } else {
-        player.shotCount = Math.min(player.maxShotCount, player.shotCount + 1);
-        player.width = player.baseWidth * player.shotCount;
-        powerUpEffects.push(new PowerUpEffect(
-          powerUp.x,
-          powerUp.y,
-          PowerUpType.MULTI_SHOT,
-          player.shotCount
-        ));
-        showPowerUpNotification(PowerUpType.MULTI_SHOT);
+    function applyPowerUp(powerUp) {
+      if (powerUp.hp <= 0) {
+        const notification = document.getElementById('powerUpNotification');
+        
+        if (powerUp.type === PowerUpType.DAMAGE) {
+          player.powerLevel = Math.min(5, player.powerLevel + 1);
+          notification.textContent = `攻撃力 +10！`;
+          notification.style.color = '#ff6666';
+          notification.style.textShadow = '0 0 20px #ff0000';
+        } else {
+          player.shotCount = Math.min(player.maxShotCount, player.shotCount + 1);
+          player.width = player.baseWidth * player.shotCount;
+          notification.textContent = `${player.shotCount}列追加！`;
+          notification.style.color = '#66ff66';
+          notification.style.textShadow = '0 0 20px #00ff00';
+        }
+        
+        // アニメーション効果
+        notification.style.opacity = '1';
+        notification.style.transform = 'translate(-50%, -50%) scale(1.2)';
+        
+        setTimeout(() => {
+          notification.style.opacity = '0';
+          notification.style.transform = 'translate(-50%, -50%) scale(1)';
+        }, 1500);
+
+        // パワーアップアイテムを削除
+        powerUps = powerUps.filter(p => p !== powerUp);
+        return true;
       }
-      powerUps = powerUps.filter(p => p !== powerUp);
+      return false;
     }
 
     // ゲームリセット時にエフェクトもクリア
     function resetGame() {
-      // ... existing reset code ...
-      powerUpEffects = [];
+      enemies = [];
+      bullets = [];
+      powerUps = [];
+      totalDamage = 0;
+      gameOver = false;
+      isPaused = false;
+      isGameStarted = false;
+      gameTime = 0;
+      difficultyLevel = 1;
+      lastEnemySpawnTime = 0;
+      lastPowerUpTime = 0;
+      
+      resetPlayerPosition();
+      document.getElementById('score').textContent = 'Damage: 0';
       document.getElementById('powerUpNotification').style.opacity = '0';
+      document.getElementById('powerUpNotification').style.transform = 'translate(-50%, -50%) scale(1)';
     }
   </script>
 </body>
