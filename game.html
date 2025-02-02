@@ -21,6 +21,7 @@
       color: white;
       font-size: 48px;
       display: none;
+      text-align: center;
     }
     #pauseButton {
       position: absolute;
@@ -79,13 +80,36 @@
     #startButton:hover {
       background: #ff6666;
     }
+    #restartButton {
+      background: #ff4444;
+      border: none;
+      padding: 15px 40px;
+      font-size: 24px;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 20px;
+      display: block;
+    }
+    #restartButton:hover {
+      background: #ff6666;
+    }
+    #finalScore {
+      font-size: 32px;
+      margin: 20px 0;
+    }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
   <button id="pauseButton">⏸</button>
   <div id="score">Damage: 0</div>
-  <div id="gameOver">Game Over</div>
+  <div id="gameOver">
+    GAME OVER
+    <div id="finalScore">Total Damage: 0</div>
+    <button id="restartButton">タイトルに戻る</button>
+  </div>
   <div id="titleScreen">
     <div id="gameTitle">ラストうおー！</div>
     <div id="gameSubtitle">最後の雄叫び</div>
@@ -258,14 +282,21 @@
     resetPlayerPosition();
     window.addEventListener('resize', resetPlayerPosition);
 
+    // ゲームオーバー処理を関数化
+    function showGameOver() {
+      gameOver = true;
+      document.getElementById('gameOver').style.display = 'block';
+      document.getElementById('finalScore').textContent = 'Total Damage: ' + Math.floor(totalDamage);
+    }
+
     // 更新処理
     function update(deltaTime) {
       // 敵の移動と当たり判定
       for (let i = enemies.length - 1; i >= 0; i--) {
         enemies[i].update(deltaTime);
         if (enemies[i].y - enemies[i].radius > canvas.height) {
-          gameOver = true;
-          document.getElementById('gameOver').style.display = 'block';
+          showGameOver();
+          return;
         }
       }
 
@@ -398,6 +429,35 @@
       Enemy.prototype.baseSpeed = 0.05 + (difficultyLevel - 1) * 0.01;
       Enemy.prototype.baseHp = Math.ceil((30 + (difficultyLevel - 1) * 10) / 10) * 10;
     }
+
+    // リスタートボタンの処理を追加
+    document.getElementById('restartButton').addEventListener('click', function() {
+      // ゲームオーバー画面を非表示
+      document.getElementById('gameOver').style.display = 'none';
+      
+      // タイトル画面を表示
+      document.getElementById('titleScreen').style.display = 'block';
+      
+      // ゲーム状態のリセット
+      enemies = [];
+      bullets = [];
+      totalDamage = 0;
+      gameOver = false;
+      isPaused = false;
+      isGameStarted = false;
+      gameTime = 0;
+      difficultyLevel = 1;
+      lastEnemySpawnTime = 0;
+      
+      // スコア表示のリセット
+      document.getElementById('score').textContent = 'Damage: 0';
+      
+      // プレイヤーの位置をリセット
+      resetPlayerPosition();
+      
+      // 一時停止ボタンの表示をリセット
+      pauseButton.textContent = '⏸';
+    });
   </script>
 </body>
 </html>
