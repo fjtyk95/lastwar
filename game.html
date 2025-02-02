@@ -49,7 +49,7 @@
     let player = { // プレイヤーオブジェクトを追加
       x: 0,
       y: 0,
-      radius: 15,
+      radius: 30, // プレイヤーサイズを2倍に
       isDragging: false
     };
 
@@ -73,8 +73,8 @@
         ctx.closePath();
         // HPを表示（必要に応じて）
         ctx.fillStyle = 'white';
-        ctx.font = '16px sans-serif';
-        ctx.fillText(Math.ceil(this.hp), this.x - 10, this.y + 5);
+        ctx.font = '24px sans-serif'; // フォントサイズを大きく
+        ctx.fillText(Math.ceil(this.hp), this.x - 15, this.y + 8);
       }
     }
 
@@ -105,13 +105,13 @@
       }
     }
 
-    // 弾丸クラスを追加
+    // 弾丸クラスを修正
     class Bullet {
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radius = 5;
-        this.speed = 0.5; // px/ms
+        this.radius = 10; // 弾のサイズを2倍に
+        this.speed = 0.5;
         this.damage = 5;
       }
 
@@ -136,13 +136,13 @@
       }
     }
 
-    // 敵の出現
+    // 敵の出現を修正
     function spawnEnemy() {
-      const radius = Math.random() * 20 + 20; // 20～40px
+      const radius = Math.random() * 30 + 30; // 30～60pxに変更
       const x = Math.random() * (canvas.width - 2 * radius) + radius;
       const y = -radius;
-      const hp = 30; // 固定HP
-      const speedY = Math.random() * 0.05 + 0.05; // 0.05～0.1 px/ms
+      const hp = 30;
+      const speedY = Math.random() * 0.05 + 0.05;
       enemies.push(new Enemy(x, y, radius, hp, speedY));
     }
 
@@ -216,38 +216,57 @@
       ctx.fill();
       ctx.closePath();
 
-      // 弾丸の描画
       bullets.forEach(bullet => bullet.draw(ctx));
       
-      enemies.forEach(enemy => enemy.draw(ctx));
+      enemies.forEach(enemy => {
+        enemy.draw(ctx);
+        // HPの表示を大きく
+        ctx.fillStyle = 'white';
+        ctx.font = '24px sans-serif'; // フォントサイズを大きく
+        ctx.fillText(Math.ceil(enemy.hp), enemy.x - 15, enemy.y + 8);
+      });
+      
       swipeEffects.forEach(effect => effect.draw(ctx));
       
+      // スコア表示も大きく
       ctx.fillStyle = 'white';
-      ctx.font = '20px sans-serif';
-      ctx.fillText('Score: ' + score, 10, 30);
+      ctx.font = '32px sans-serif'; // スコアのフォントサイズを大きく
+      ctx.fillText('Score: ' + score, 20, 50);
     }
 
-    // プレイヤーの移動制御
-    canvas.addEventListener('mousedown', function(e) {
-      const dx = e.clientX - player.x;
-      const dy = e.clientY - player.y;
+    // タッチ操作のサポートを追加
+    canvas.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const touchX = touch.clientX - rect.left;
+      const touchY = touch.clientY - rect.top;
+      const dx = touchX - player.x;
+      const dy = touchY - player.y;
       if (dx * dx + dy * dy <= player.radius * player.radius) {
         player.isDragging = true;
       }
     });
 
-    canvas.addEventListener('mousemove', function(e) {
+    canvas.addEventListener('touchmove', function(e) {
+      e.preventDefault();
       if (player.isDragging) {
-        player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, e.clientX));
-        player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, e.clientY));
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+        player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, touchX));
+        player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, touchY));
       }
     });
 
-    canvas.addEventListener('mouseup', function(e) {
+    canvas.addEventListener('touchend', function(e) {
+      e.preventDefault();
       player.isDragging = false;
     });
 
-    canvas.addEventListener('mouseleave', function(e) {
+    canvas.addEventListener('touchcancel', function(e) {
+      e.preventDefault();
       player.isDragging = false;
     });
   </script>
