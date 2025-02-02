@@ -47,6 +47,38 @@
       font-size: 32px;
       z-index: 100;
     }
+    #titleScreen {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: white;
+      z-index: 200;
+    }
+    #gameTitle {
+      font-size: 64px;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #ff0000;
+    }
+    #gameSubtitle {
+      font-size: 32px;
+      margin-bottom: 40px;
+      color: #cccccc;
+    }
+    #startButton {
+      background: #ff4444;
+      border: none;
+      padding: 20px 60px;
+      font-size: 32px;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #startButton:hover {
+      background: #ff6666;
+    }
   </style>
 </head>
 <body>
@@ -54,6 +86,11 @@
   <button id="pauseButton">⏸</button>
   <div id="score">Damage: 0</div>
   <div id="gameOver">Game Over</div>
+  <div id="titleScreen">
+    <div id="gameTitle">ラストうおー！</div>
+    <div id="gameSubtitle">最後の雄叫び</div>
+    <button id="startButton">スタート</button>
+  </div>
   <script>
     // キャンバス初期化
     const canvas = document.getElementById('gameCanvas');
@@ -68,7 +105,6 @@
     // ゲーム変数
     let enemies = [];
     let lastEnemySpawnTime = 0;
-    const enemySpawnInterval = 2000; // 2秒ごとに出現
     let gameOver = false;
     let totalDamage = 0; // 与えたダメージの合計
     let swipeEffects = [];
@@ -80,6 +116,9 @@
       isDragging: false
     };
     let isPaused = false;
+    let isGameStarted = false;
+    let gameTime = 0; // ゲーム経過時間（ミリ秒）
+    let difficultyLevel = 1; // 難易度レベル
 
     // 敵オブジェクト
     class Enemy {
@@ -166,11 +205,11 @@
 
     // 敵の出現を修正
     function spawnEnemy() {
-      const radius = Math.random() * 50 + 50; // 50～100pxに変更
+      const radius = Math.random() * 50 + 50;
       const x = Math.random() * (canvas.width - 2 * radius) + radius;
       const y = -radius;
-      const hp = 50; // HPも増加
-      const speedY = Math.random() * 0.05 + 0.05;
+      const hp = Enemy.prototype.baseHp * (Math.random() * 0.4 + 0.8); // ±20%のばらつき
+      const speedY = Enemy.prototype.baseSpeed * (Math.random() * 0.4 + 0.8); // ±20%のばらつき
       enemies.push(new Enemy(x, y, radius, hp, speedY));
     }
 
@@ -195,10 +234,11 @@
         return;
       }
       
-      if (!isPaused) {
+      if (!isPaused && isGameStarted) {
         const deltaTime = timestamp - lastFrameTime;
         lastFrameTime = timestamp;
         
+        updateDifficulty(deltaTime);
         update(deltaTime);
         draw();
         
@@ -315,6 +355,31 @@
       e.preventDefault();
       player.isDragging = false;
     });
+
+    // スタートボタンの処理
+    document.getElementById('startButton').addEventListener('click', function() {
+      document.getElementById('titleScreen').style.display = 'none';
+      isGameStarted = true;
+      gameTime = 0;
+      lastFrameTime = performance.now();
+      requestAnimationFrame(gameLoop);
+    });
+
+    // 難易度調整関数を追加
+    function updateDifficulty(deltaTime) {
+      gameTime += deltaTime;
+      // 30秒ごとに難易度上昇
+      difficultyLevel = Math.floor(gameTime / 30000) + 1;
+      
+      // 難易度に応じてゲームパラメータを調整
+      const baseSpawnInterval = 2000; // 基本スポーン間隔
+      const minSpawnInterval = 500; // 最小スポーン間隔
+      enemySpawnInterval = Math.max(baseSpawnInterval - (difficultyLevel - 1) * 300, minSpawnInterval);
+      
+      // 敵の強化
+      Enemy.prototype.baseSpeed = 0.05 + (difficultyLevel - 1) * 0.01;
+      Enemy.prototype.baseHp = 50 + (difficultyLevel - 1) * 10;
+    }
   </script>
 </body>
 </html>
