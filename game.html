@@ -25,14 +25,14 @@
     #pauseButton {
       position: absolute;
       top: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
+      left: 20px;
+      width: 120px;
+      height: 120px;
       background: rgba(255, 255, 255, 0.3);
       border: none;
       border-radius: 50%;
       color: white;
-      font-size: 24px;
+      font-size: 48px;
       cursor: pointer;
       z-index: 100;
       display: flex;
@@ -64,6 +64,14 @@
     #pauseMenu button:hover {
       background: #45a049;
     }
+    #score {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      font-size: 32px;
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
@@ -74,6 +82,7 @@
     <button id="resumeButton">再開</button>
   </div>
   <div id="gameOver">Game Over</div>
+  <div id="score">Bullets: 0</div>
   <script>
     // キャンバス初期化
     const canvas = document.getElementById('gameCanvas');
@@ -93,6 +102,7 @@
     let score = 0;
     let swipeEffects = [];
     let bullets = []; // 弾丸の配列を追加
+    let bulletsFired = 0; // 発射した弾数をカウント
     let player = {
       x: 0,
       y: 0,
@@ -271,6 +281,8 @@
       // 新しい弾を発射（一定間隔で）
       if (!gameOver && !isPaused && performance.now() % 200 < 16) {
         bullets.push(new Bullet(player.x, player.y));
+        bulletsFired++; // 弾を発射するたびにカウントを増やす
+        document.getElementById('score').textContent = 'Bullets: ' + bulletsFired;
       }
 
       enemies = enemies.filter(enemy => enemy.hp > 0);
@@ -299,11 +311,6 @@
       });
       
       swipeEffects.forEach(effect => effect.draw(ctx));
-      
-      // スコア表示も大きく
-      ctx.fillStyle = 'white';
-      ctx.font = '32px sans-serif'; // スコアのフォントサイズを大きく
-      ctx.fillText('Score: ' + score, 20, 50);
     }
 
     // タッチ操作のサポートを修正
