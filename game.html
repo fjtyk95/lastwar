@@ -46,10 +46,10 @@
     let score = 0;
     let swipeEffects = [];
     let bullets = []; // 弾丸の配列を追加
-    let player = { // プレイヤーオブジェクトを追加
+    let player = {
       x: 0,
       y: 0,
-      radius: 45, // 親指サイズに調整（約90pxの直径）
+      radius: 60, // さらに大きく（直径120px）
       isDragging: false
     };
 
@@ -110,9 +110,9 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radius = 15; // 弾のサイズも少し大きく
+        this.radius = 20; // 弾のサイズも大きく
         this.speed = 0.5;
-        this.damage = 5;
+        this.damage = 8; // ダメージも増加
       }
 
       update(deltaTime) {
@@ -138,10 +138,10 @@
 
     // 敵の出現を修正
     function spawnEnemy() {
-      const radius = Math.random() * 40 + 40; // 40～80pxに変更
+      const radius = Math.random() * 50 + 50; // 50～100pxに変更
       const x = Math.random() * (canvas.width - 2 * radius) + radius;
       const y = -radius;
-      const hp = 40; // HPも少し増加
+      const hp = 50; // HPも増加
       const speedY = Math.random() * 0.05 + 0.05;
       enemies.push(new Enemy(x, y, radius, hp, speedY));
     }
@@ -166,7 +166,7 @@
     // プレイヤーの初期位置を設定
     function resetPlayerPosition() {
       player.x = canvas.width / 2;
-      player.y = canvas.height - 100; // 画面下部の固定位置
+      player.y = canvas.height - 120; // 画面下部の位置も調整
     }
     resetPlayerPosition();
     window.addEventListener('resize', resetPlayerPosition);
@@ -241,9 +241,11 @@
       const rect = canvas.getBoundingClientRect();
       const touchX = touch.clientX - rect.left;
       const touchY = touch.clientY - rect.top;
+      
+      // タッチ判定範囲を広げる
       const dx = touchX - player.x;
       const dy = touchY - player.y;
-      if (dx * dx + dy * dy <= player.radius * player.radius) {
+      if (dx * dx + dy * dy <= (player.radius * 1.5) * (player.radius * 1.5)) {
         player.isDragging = true;
       }
     });
@@ -254,7 +256,6 @@
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
         const touchX = touch.clientX - rect.left;
-        // X座標のみ更新（Y座標は固定）
         player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, touchX));
       }
     });
