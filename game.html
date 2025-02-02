@@ -11,7 +11,7 @@
     }
     canvas {
       display: block;
-      background: #222;
+      background: linear-gradient(to bottom, #1a1a2e, #16213e);
     }
     #gameOver {
       position: absolute;
@@ -47,6 +47,7 @@
       color: white;
       font-size: 32px;
       z-index: 100;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     }
     #titleScreen {
       position: absolute;
@@ -107,7 +108,7 @@
       transform: translate(-50%, -50%);
       font-size: 36px;
       color: white;
-      text-shadow: 0 0 10px #00ff00;
+      text-shadow: 0 0 15px #00ffff;
       opacity: 0;
       transition: opacity 0.3s;
       z-index: 100;
@@ -290,20 +291,46 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radius = 15; // サイズを少し小さく
-        this.speed = 0.8; // 弾速を上げる
+        this.radius = 12;
+        this.speed = 0.8;
         this.damage = 10;
+        this.trail = [];
       }
 
       update(deltaTime) {
+        // 軌跡を記録
+        this.trail.push({x: this.x, y: this.y, alpha: 1});
+        if (this.trail.length > 5) {
+          this.trail.shift();
+        }
+
         this.y -= this.speed * deltaTime;
+        
+        // 軌跡のアルファ値を更新
+        this.trail.forEach((point, index) => {
+          point.alpha = index / this.trail.length;
+        });
+
         return this.y > -this.radius;
       }
 
       draw(ctx) {
+        // 軌跡を描画
+        this.trail.forEach(point => {
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, this.radius * 0.8, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 100, ${point.alpha * 0.3})`;
+          ctx.fill();
+          ctx.closePath();
+        });
+
+        // 弾本体
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'yellow';
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+        gradient.addColorStop(1, 'rgba(255, 255, 0, 0.4)');
+        ctx.fillStyle = gradient;
         ctx.fill();
         ctx.closePath();
       }
@@ -610,30 +637,70 @@
       pauseButton.textContent = '⏸';
     });
 
-    // パワーアップエフェクトクラスを追加
+    // パワーアップエフェクトクラスを改善
     class PowerUpEffect {
       constructor(x, y, type) {
         this.x = x;
         this.y = y;
         this.type = type;
         this.radius = 0;
-        this.maxRadius = 100;
+        this.maxRadius = 150;
         this.alpha = 1.0;
-        this.color = type === PowerUpType.DAMAGE ? '#ff6666' : '#66ff66';
+        this.particles = [];
+        this.color = type === PowerUpType.DAMAGE ? '#ff3333' : '#33ff33';
+        
+        // パーティクルを生成
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * Math.PI * 2;
+          this.particles.push({
+            x: x,
+            y: y,
+            angle: angle,
+            speed: Math.random() * 0.3 + 0.2,
+            size: Math.random() * 10 + 5
+          });
+        }
       }
 
       update(deltaTime) {
-        this.radius += deltaTime * 0.3;
+        this.radius += deltaTime * 0.4;
         this.alpha = Math.max(0, 1 - this.radius / this.maxRadius);
+
+        // パーティクルの更新
+        this.particles.forEach(particle => {
+          particle.x += Math.cos(particle.angle) * particle.speed * deltaTime;
+          particle.y += Math.sin(particle.angle) * particle.speed * deltaTime;
+        });
+
         return this.alpha > 0;
       }
 
       draw(ctx) {
+        // 光の輪
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.strokeStyle = `${this.color}${Math.floor(this.alpha * 255).toString(16).padStart(2, '0')}`;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 5;
         ctx.stroke();
+        ctx.closePath();
+
+        // パーティクル
+        this.particles.forEach(particle => {
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, particle.size * this.alpha, 0, Math.PI * 2);
+          ctx.fillStyle = `${this.color}${Math.floor(this.alpha * 200).toString(16).padStart(2, '0')}`;
+          ctx.fill();
+          ctx.closePath();
+        });
+
+        // 中心の光
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 40 * this.alpha);
+        gradient.addColorStop(0, `${this.color}ff`);
+        gradient.addColorStop(1, `${this.color}00`);
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 40 * this.alpha, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
         ctx.closePath();
       }
     }
