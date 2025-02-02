@@ -177,11 +177,7 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-<<<<<<< HEAD
-        this.radius = 20; // 弾のサイズ
-=======
         this.radius = 20;
->>>>>>> 25f8dab17843a72ba8184c5b6e1603ddfe0d45eb
         this.speed = 0.5;
         this.damage = 10; // ダメージを10に固定
       }
@@ -212,13 +208,8 @@
       const radius = Math.random() * 50 + 50;
       const x = Math.random() * (canvas.width - 2 * radius) + radius;
       const y = -radius;
-<<<<<<< HEAD
-      const hp = 30; // 初期HPを30に設定（3発で撃破）
-      const speedY = Math.random() * 0.05 + 0.05;
-=======
       const hp = Math.ceil(Enemy.prototype.baseHp / 10) * 10; // HPを10の倍数に調整
       const speedY = Enemy.prototype.baseSpeed * (Math.random() * 0.4 + 0.8);
->>>>>>> 25f8dab17843a72ba8184c5b6e1603ddfe0d45eb
       enemies.push(new Enemy(x, y, radius, hp, speedY));
     }
 
@@ -286,21 +277,23 @@
 
       // 弾丸の更新と当たり判定
       bullets = bullets.filter(bullet => {
-        const isActive = bullet.update(deltaTime);
+        let isActive = bullet.update(deltaTime);
         if (isActive) {
-          enemies.forEach(enemy => {
+          for (let enemy of enemies) {
             if (bullet.checkCollision(enemy)) {
               const damage = Math.min(bullet.damage, enemy.hp);
               enemy.hp -= bullet.damage;
               totalDamage += damage;
               document.getElementById('score').textContent = 'Damage: ' + Math.floor(totalDamage);
-              return false;
+              isActive = false; // 弾が当たったら消える
+              break; // 1つの弾は1つの敵にのみ当たる
             }
-          });
+          }
         }
         return isActive;
       });
 
+      // HPが0以下になった敵のみを削除
       enemies = enemies.filter(enemy => enemy.hp > 0);
       swipeEffects = swipeEffects.filter(effect => effect.update());
     }
@@ -383,15 +376,9 @@
       const minSpawnInterval = 500;
       enemySpawnInterval = Math.max(baseSpawnInterval - (difficultyLevel - 1) * 300, minSpawnInterval);
       
-<<<<<<< HEAD
-      // 敵の強化（HPを10の倍数で増加）
-      Enemy.prototype.baseSpeed = 0.05 + (difficultyLevel - 1) * 0.01;
-      Enemy.prototype.baseHp = 30 + (difficultyLevel - 1) * 10; // 30から開始して10ずつ増加
-=======
       // 敵の強化（HPを10の倍数に調整）
       Enemy.prototype.baseSpeed = 0.05 + (difficultyLevel - 1) * 0.01;
       Enemy.prototype.baseHp = Math.ceil((30 + (difficultyLevel - 1) * 10) / 10) * 10;
->>>>>>> 25f8dab17843a72ba8184c5b6e1603ddfe0d45eb
     }
   </script>
 </body>
