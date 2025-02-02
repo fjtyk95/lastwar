@@ -230,15 +230,20 @@
         }
       }
 
+      // 弾の発射（一定間隔で）
+      if (!gameOver && !isPaused && performance.now() % 200 < 16) {
+        bullets.push(new Bullet(player.x, player.y));
+      }
+
       // 弾丸の更新と当たり判定
       bullets = bullets.filter(bullet => {
         const isActive = bullet.update(deltaTime);
         if (isActive) {
           enemies.forEach(enemy => {
             if (bullet.checkCollision(enemy)) {
-              const damage = Math.min(bullet.damage, enemy.hp); // 実際に与えたダメージ
+              const damage = Math.min(bullet.damage, enemy.hp);
               enemy.hp -= bullet.damage;
-              totalDamage += damage; // ダメージをスコアに加算
+              totalDamage += damage;
               document.getElementById('score').textContent = 'Damage: ' + Math.floor(totalDamage);
               return false;
             }
