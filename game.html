@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Swipe Attack Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    canvas {
+      display: block;
+      background: #222;
+    }
+    #gameOver {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 48px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <div id="gameOver">Game Over</div>
+  <script>
+    // キャンバス初期化
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // ゲーム変数
+    let enemies = [];
+    let lastEnemySpawnTime = 0;
+    const enemySpawnInterval = 2000; // 2秒ごとに出現
+    let gameOver = false;
+    let score = 0;
+
+    // 敵オブジェクト
+    class Enemy {
+      constructor(x, y, radius, hp, speedY) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.hp = hp;
+        this.speedY = speedY; // px/ms
+      }
+      update(deltaTime) {
+        this.y += this.speedY * deltaTime;
+      }
+      draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+        ctx.closePath();
+        // HPを表示（必要に応じて）
+        ctx.fillStyle = 'white';
+        ctx.font = '16px sans-serif';
+        ctx.fillText(Math.ceil(this.hp), this.x - 10, this.y + 5);
+      }
+    }
+
+    // 敵の出現
+    function spawnEnemy() {
+      const radius = Math.random() * 20 + 20; // 20～40px
+      const x = Math.random() * (canvas.width - 2 * radius) + radius;
+      const y = -radius;
+      const hp = 30; // 固定HP
+      const speedY = Math.random() * 0.05 + 0.05; // 0.05～0.1 px/ms
+      enemies.push(new Enemy(x, y, radius, hp, speedY));
+    }
+
+    // ゲームループ
+    let lastFrameTime = performance.now();
+    function gameLoop(timestamp) {
+      const deltaTime = timestamp - lastFrameTime;
+      lastFrameTime = timestamp;
+      if (!gameOver) {
+        update(deltaTime);
+        draw();
+        if (timestamp - lastEnemySpawnTime > enemySpawnInterval) {
+          spawnEnemy();
+          lastEnemySpawnTime = timestamp;
+        }
+        requestAnimationFrame(gameLoop);
+      }
+    }
+    requestAnimationFrame(gameLoop);
+
+    // 更新処理
+    function update(deltaTime) {
+      // 敵の移動
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        enemies[i].update(deltaTime);
+        // 敵が画面下部に到達したらゲームオーバー
+        if (enemies[i].y - enemies[i].radius > canvas.height) {
+          gameOver = true;
+          document.getElementById('gameOver').style.display = 'block';
+        }
+      }
+      // 撃破済みの敵を削除
+      enemies = enemies.filter(enemy => enemy.hp > 0);
+    }
+
+    // 描画処理
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      enemies.forEach(enemy => enemy.draw(ctx));
+      // スコア表示
+      ctx.fillStyle = 'white';
+      ctx.font = '20px sans-serif';
+      ctx.fillText('Score: ' + score, 10, 30);
+    }
+
+    // タッチ操作によるスワイプ攻撃の実装
+    let touchStartX = null;
+    let touchStartY = null;
+    let touchStartTime = null;
+
+    canvas.addEventListener('touchstart', function(e) {
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      touchStartTime = e.timeStamp;
+    });
+
+    canvas.addEventListener('touchend', function(e) {
+      if (touchStartX === null || touchStartY === null || touchStartTime === null) return;
+      const touch = e.changedTouches[0];
+      const touchEndX = touch.clientX;
+      const touchEndY = touch.clientY;
+      const touchEndTime = e.timeStamp;
+      let dt = touchEndTime - touchStartTime;
+      if (dt < 1) dt = 1; // ゼロ除算防止
+      const dx = touchEndX - touchStartX;
+      const dy = touchEndY - touchStartY;
+      const distance = Math.hypot(dx, dy);
+      // スワイプ速度（px/ms）
+      const swipeSpeed = distance / dt;
+      // ダメージ計算：基本ダメージ＋スワイプ速度に比例した加算値
+      const baseDamage = 10;
+      const multiplier = 200; // 調整可能
+      const damage = baseDamage + multiplier * swipeSpeed;
+
+      // スワイプの線分と各敵との衝突判定
+      enemies.forEach(enemy => {
+        if (lineIntersectsCircle(touchStartX, touchStartY, touchEndX, touchEndY, enemy.x, enemy.y, enemy.radius)) {
+          enemy.hp -= damage;
+          if (enemy.hp <= 0) {
+            score += 10; // 敵撃破でスコア加算
+          }
+        }
+      });
+      // タッチ情報をリセット
+      touchStartX = touchStartY = touchStartTime = null;
+    });
+
+    // 線分と円の衝突判定
+    function lineIntersectsCircle(x1, y1, x2, y2, cx, cy, radius) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const lengthSq = dx * dx + dy * dy;
+      // 円の中心と線分の始点からの内積から最短距離の係数tを算出
+      let t = ((cx - x1) * dx + (cy - y1) * dy) / lengthSq;
+      t = Math.max(0, Math.min(1, t));
+      const closestX = x1 + t * dx;
+      const closestY = y1 + t * dy;
+      const distX = cx - closestX;
+      const distY = cy - closestY;
+      return (distX * distX + distY * distY) <= radius * radius;
+    }
+  </script>
+</body>
+</html>
