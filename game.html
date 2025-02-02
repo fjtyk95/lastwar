@@ -100,6 +100,18 @@
       font-size: 32px;
       margin: 20px 0;
     }
+    #powerUpNotification {
+      position: absolute;
+      left: 50%;
+      top: 30%;
+      transform: translate(-50%, -50%);
+      font-size: 36px;
+      color: white;
+      text-shadow: 0 0 10px #00ff00;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
@@ -116,6 +128,7 @@
     <div id="gameSubtitle">最後の雄叫び</div>
     <button id="startButton">スタート</button>
   </div>
+  <div id="powerUpNotification"></div>
   <script>
     // キャンバス初期化
     const canvas = document.getElementById('gameCanvas');
@@ -484,6 +497,9 @@
 
       // パワーアップアイテムの描画
       powerUps.forEach(powerUp => powerUp.draw(ctx));
+
+      // パワーアップエフェクトの描画
+      powerUpEffects.forEach(effect => effect.draw(ctx));
     }
 
     // タッチ操作のサポートを修正
@@ -593,6 +609,74 @@
       // 一時停止ボタンの表示をリセット
       pauseButton.textContent = '⏸';
     });
+
+    // パワーアップエフェクトクラスを追加
+    class PowerUpEffect {
+      constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.radius = 0;
+        this.maxRadius = 100;
+        this.alpha = 1.0;
+        this.color = type === PowerUpType.DAMAGE ? '#ff6666' : '#66ff66';
+      }
+
+      update(deltaTime) {
+        this.radius += deltaTime * 0.3;
+        this.alpha = Math.max(0, 1 - this.radius / this.maxRadius);
+        return this.alpha > 0;
+      }
+
+      draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `${this.color}${Math.floor(this.alpha * 255).toString(16).padStart(2, '0')}`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.closePath();
+      }
+    }
+
+    // パワーアップエフェクトの配列を追加
+    let powerUpEffects = [];
+
+    // パワーアップ通知を表示する関数
+    function showPowerUpNotification(type) {
+      const notification = document.getElementById('powerUpNotification');
+      const message = type === PowerUpType.DAMAGE ? 
+        `攻撃力アップ！ (${player.powerLevel}倍)` : 
+        `マルチショット！ (${player.shotCount}連射)`;
+      
+      notification.textContent = message;
+      notification.style.opacity = '1';
+      
+      setTimeout(() => {
+        notification.style.opacity = '0';
+      }, 2000);
+    }
+
+    // パワーアップ効果適用時の処理を修正
+    if (powerUp.hp <= 0) {
+      if (powerUp.type === PowerUpType.DAMAGE) {
+        player.powerLevel = Math.min(5, player.powerLevel + 1);
+        powerUpEffects.push(new PowerUpEffect(player.x, player.y, PowerUpType.DAMAGE));
+        showPowerUpNotification(PowerUpType.DAMAGE);
+      } else {
+        player.shotCount = Math.min(player.maxShotCount, player.shotCount + 1);
+        player.width = player.baseWidth * player.shotCount;
+        powerUpEffects.push(new PowerUpEffect(player.x, player.y, PowerUpType.MULTI_SHOT));
+        showPowerUpNotification(PowerUpType.MULTI_SHOT);
+      }
+      powerUps = powerUps.filter(p => p !== powerUp);
+    }
+
+    // ゲームリセット時にエフェクトもクリア
+    function resetGame() {
+      // ... existing reset code ...
+      powerUpEffects = [];
+      document.getElementById('powerUpNotification').style.opacity = '0';
+    }
   </script>
 </body>
 </html>
