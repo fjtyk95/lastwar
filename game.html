@@ -137,9 +137,9 @@
     let player = {
       x: 0,
       y: 0,
-      height: 60, // 固定の高さ
-      width: 60,  // 可変の幅（初期値）
-      baseWidth: 60, // 基本の幅
+      height: 90,  // 高さを90pxに増加
+      width: 90,   // 初期幅も90pxに増加
+      baseWidth: 90, // 基本幅も90pxに
       isDragging: false,
       powerLevel: 1,
       shotCount: 1,
@@ -156,15 +156,15 @@
       MULTI_SHOT: 'multiShot'
     };
 
-    // パワーアップアイテムクラスを改善
+    // パワーアップアイテムクラスを調整
     class PowerUp {
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radius = 30;
-        this.hp = 30; // HPを増加
-        this.maxHp = 30;
-        this.speedY = 0.05;
+        this.radius = 40; // サイズを大きく
+        this.hp = 50;     // HPを増加
+        this.maxHp = 50;
+        this.speedY = 0.1; // 速度を上げる
         this.type = Math.random() < 0.5 ? PowerUpType.DAMAGE : PowerUpType.MULTI_SHOT;
       }
 
@@ -211,9 +211,8 @@
     // パワーアップアイテムの配列を追加
     let powerUps = [];
 
-    // パワーアップアイテムの出現処理
-    let lastPowerUpTime = 0;
-    const powerUpInterval = 15000; // 15秒ごとに出現
+    // パワーアップアイテムの出現間隔を調整
+    const powerUpInterval = 20000; // 20秒ごとに出現（レアに）
 
     // 敵オブジェクト
     class Enemy {
@@ -273,8 +272,8 @@
         this.x = x;
         this.y = y;
         this.radius = 20;
-        this.speed = 0.5;
-        this.damage = 10; // ダメージを10に固定
+        this.speed = 0.6; // 弾速を上げる
+        this.damage = 10;
       }
 
       update(deltaTime) {
@@ -300,11 +299,11 @@
 
     // 敵の出現を修正
     function spawnEnemy() {
-      const radius = Math.random() * 50 + 50;
+      const radius = Math.random() * 40 + 40; // サイズを40-80pxに調整
       const x = Math.random() * (canvas.width - 2 * radius) + radius;
       const y = -radius;
-      const hp = Math.ceil(Enemy.prototype.baseHp / 10) * 10; // HPを10の倍数に調整
-      const speedY = Enemy.prototype.baseSpeed * (Math.random() * 0.4 + 0.8);
+      const hp = Math.ceil(Enemy.prototype.baseHp / 10) * 10;
+      const speedY = Enemy.prototype.baseSpeed * (Math.random() * 0.3 + 0.85); // 速度のばらつきを調整
       enemies.push(new Enemy(x, y, radius, hp, speedY));
     }
 
@@ -387,13 +386,13 @@
       });
 
       // 弾の発射処理を修正（複数発射対応）
-      if (!gameOver && !isPaused && performance.now() % 200 < 16) {
-        const spread = player.width * 0.8; // 弾の間隔
+      if (!gameOver && !isPaused && performance.now() % 250 < 16) { // 250msに1回に変更
+        const spread = player.width * 0.8;
         const offset = (player.shotCount - 1) * spread / 2;
         for (let i = 0; i < player.shotCount; i++) {
           const bulletX = player.x - offset + i * spread;
           const bullet = new Bullet(bulletX, player.y);
-          bullet.damage = 10 * player.powerLevel; // 攻撃力を適用
+          bullet.damage = 10 * player.powerLevel;
           bullets.push(bullet);
         }
       }
@@ -550,15 +549,15 @@
     // 難易度調整を修正
     function updateDifficulty(deltaTime) {
       gameTime += deltaTime;
-      difficultyLevel = Math.floor(gameTime / 45000) + 1; // 45秒ごとに難易度上昇
+      difficultyLevel = Math.floor(gameTime / 30000) + 1; // 30秒ごとに難易度上昇
       
-      const baseSpawnInterval = 2500; // 敵の出現間隔を長く
-      const minSpawnInterval = 800;   // 最小間隔も調整
-      enemySpawnInterval = Math.max(baseSpawnInterval - (difficultyLevel - 1) * 200, minSpawnInterval);
+      const baseSpawnInterval = 2000; // 出現間隔を短く
+      const minSpawnInterval = 500;   // 最小間隔も短く
+      enemySpawnInterval = Math.max(baseSpawnInterval - (difficultyLevel - 1) * 250, minSpawnInterval);
       
       // 敵の強化を調整
-      Enemy.prototype.baseSpeed = 0.03 + (difficultyLevel - 1) * 0.008; // 速度上昇を緩やか
-      Enemy.prototype.baseHp = Math.ceil((40 + (difficultyLevel - 1) * 15) / 10) * 10; // HP上昇を調整
+      Enemy.prototype.baseSpeed = 0.05 + (difficultyLevel - 1) * 0.012; // 速度上昇を強化
+      Enemy.prototype.baseHp = Math.ceil((50 + (difficultyLevel - 1) * 20) / 10) * 10; // HP上昇を強化
     }
 
     // リスタートボタンの処理を追加
