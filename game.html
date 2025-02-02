@@ -137,12 +137,13 @@
     let player = {
       x: 0,
       y: 0,
-      radius: 60, // さらに大きく（直径120px）
-      baseRadius: 60, // 基本の大きさを保存
+      height: 60, // 固定の高さ
+      width: 60,  // 可変の幅（初期値）
+      baseWidth: 60, // 基本の幅
       isDragging: false,
-      powerLevel: 1, // 攻撃力レベル
-      shotCount: 1, // 同時発射数
-      maxShotCount: 3 // 最大同時発射数
+      powerLevel: 1,
+      shotCount: 1,
+      maxShotCount: 3
     };
     let isPaused = false;
     let isGameStarted = false;
@@ -155,13 +156,14 @@
       MULTI_SHOT: 'multiShot'
     };
 
-    // パワーアップアイテムクラスを追加
+    // パワーアップアイテムクラスを改善
     class PowerUp {
       constructor(x, y) {
         this.x = x;
         this.y = y;
         this.radius = 30;
-        this.hp = 20;
+        this.hp = 30; // HPを増加
+        this.maxHp = 30;
         this.speedY = 0.05;
         this.type = Math.random() < 0.5 ? PowerUpType.DAMAGE : PowerUpType.MULTI_SHOT;
       }
@@ -173,22 +175,36 @@
       draw(ctx) {
         ctx.beginPath();
         if (this.type === PowerUpType.DAMAGE) {
-          // 攻撃力アップは三角形
+          // 攻撃力アップは赤い三角形
           ctx.moveTo(this.x, this.y - this.radius);
           ctx.lineTo(this.x - this.radius, this.y + this.radius);
           ctx.lineTo(this.x + this.radius, this.y + this.radius);
+          ctx.fillStyle = '#ff6666';
         } else {
-          // マルチショットは四角形
+          // マルチショットは緑の四角形
           ctx.rect(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+          ctx.fillStyle = '#66ff66';
         }
-        ctx.fillStyle = 'lightblue';
         ctx.fill();
         ctx.closePath();
 
-        // HPを表示
-        ctx.fillStyle = 'white';
-        ctx.font = '20px sans-serif';
-        ctx.fillText(Math.ceil(this.hp), this.x - 10, this.y + 5);
+        // HPバーの描画
+        const barWidth = this.radius * 2;
+        const barHeight = 6;
+        const barY = this.y + this.radius + 10;
+        
+        // HPバーの背景
+        ctx.fillStyle = '#444';
+        ctx.fillRect(this.x - barWidth/2, barY, barWidth, barHeight);
+        
+        // 現在のHP
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(
+          this.x - barWidth/2,
+          barY,
+          barWidth * (this.hp / this.maxHp),
+          barHeight
+        );
       }
     }
 
@@ -197,7 +213,7 @@
 
     // パワーアップアイテムの出現処理
     let lastPowerUpTime = 0;
-    const powerUpInterval = 10000; // 10秒ごとに出現
+    const powerUpInterval = 15000; // 15秒ごとに出現
 
     // 敵オブジェクト
     class Enemy {
@@ -358,12 +374,12 @@
         powerUp.update(deltaTime);
         
         // プレイヤーとの衝突判定
-        if (powerUp.y + powerUp.radius >= player.y - player.radius) {
+        if (powerUp.y + powerUp.radius >= player.y - player.height/2) {
           if (powerUp.hp > 0) {
             // HPが残っている場合、プレイヤーの攻撃力が下がる
             player.powerLevel = Math.max(1, player.powerLevel - 1);
             player.shotCount = Math.max(1, player.shotCount - 1);
-            player.radius = player.baseRadius * player.shotCount;
+            player.width = player.baseWidth * player.shotCount;
             return false;
           }
         }
@@ -372,7 +388,7 @@
 
       // 弾の発射処理を修正（複数発射対応）
       if (!gameOver && !isPaused && performance.now() % 200 < 16) {
-        const spread = player.radius * 0.8; // 弾の間隔
+        const spread = player.width * 0.8; // 弾の間隔
         const offset = (player.shotCount - 1) * spread / 2;
         for (let i = 0; i < player.shotCount; i++) {
           const bulletX = player.x - offset + i * spread;
@@ -404,10 +420,10 @@
               if (powerUp.hp <= 0) {
                 // パワーアップ効果の適用
                 if (powerUp.type === PowerUpType.DAMAGE) {
-                  player.powerLevel++;
+                  player.powerLevel = Math.min(5, player.powerLevel + 1); // 最大5倍
                 } else {
                   player.shotCount = Math.min(player.maxShotCount, player.shotCount + 1);
-                  player.radius = player.baseRadius * player.shotCount;
+                  player.width = player.baseWidth * player.shotCount;
                 }
                 powerUps = powerUps.filter(p => p !== powerUp);
               }
@@ -423,7 +439,7 @@
       for (let i = enemies.length - 1; i >= 0; i--) {
         enemies[i].update(deltaTime);
         // プレイヤーの高さ（最上部）に敵が到達したらゲームオーバー
-        if (enemies[i].y + enemies[i].radius >= player.y - player.radius) {
+        if (enemies[i].y + enemies[i].radius >= player.y - player.height/2) {
           showGameOver();
           return;
         }
@@ -438,13 +454,13 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // プレイヤーを四角形で描画
+      // プレイヤーを四角形で描画（横幅のみ可変）
       ctx.beginPath();
       ctx.rect(
-        player.x - player.radius, // 左上のX座標
-        player.y - player.radius, // 左上のY座標
-        player.radius * 2, // 幅
-        player.radius * 2  // 高さ
+        player.x - player.width/2,  // 左上のX座標
+        player.y - player.height/2, // 左上のY座標
+        player.width,               // 幅（可変）
+        player.height              // 高さ（固定）
       );
       ctx.fillStyle = 'blue';
       ctx.fill();
@@ -475,10 +491,10 @@
       const touchY = touch.clientY - rect.top;
       
       // 四角形の当たり判定
-      if (touchX >= player.x - player.radius * 1.5 && 
-          touchX <= player.x + player.radius * 1.5 &&
-          touchY >= player.y - player.radius * 1.5 &&
-          touchY <= player.y + player.radius * 1.5) {
+      if (touchX >= player.x - player.width/2 && 
+          touchX <= player.x + player.width/2 &&
+          touchY >= player.y - player.height/2 &&
+          touchY <= player.y + player.height/2) {
         player.isDragging = true;
       }
     });
@@ -489,7 +505,7 @@
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
         const touchX = touch.clientX - rect.left;
-        player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, touchX));
+        player.x = Math.max(player.width/2, Math.min(canvas.width - player.width/2, touchX));
       }
     });
 
@@ -531,18 +547,18 @@
       requestAnimationFrame(gameLoop);
     });
 
-    // 難易度調整関数を修正
+    // 難易度調整を修正
     function updateDifficulty(deltaTime) {
       gameTime += deltaTime;
-      difficultyLevel = Math.floor(gameTime / 30000) + 1;
+      difficultyLevel = Math.floor(gameTime / 45000) + 1; // 45秒ごとに難易度上昇
       
-      const baseSpawnInterval = 2000;
-      const minSpawnInterval = 500;
-      enemySpawnInterval = Math.max(baseSpawnInterval - (difficultyLevel - 1) * 300, minSpawnInterval);
+      const baseSpawnInterval = 2500; // 敵の出現間隔を長く
+      const minSpawnInterval = 800;   // 最小間隔も調整
+      enemySpawnInterval = Math.max(baseSpawnInterval - (difficultyLevel - 1) * 200, minSpawnInterval);
       
-      // 敵の強化（HPを10の倍数に調整）
-      Enemy.prototype.baseSpeed = 0.05 + (difficultyLevel - 1) * 0.01;
-      Enemy.prototype.baseHp = Math.ceil((30 + (difficultyLevel - 1) * 10) / 10) * 10;
+      // 敵の強化を調整
+      Enemy.prototype.baseSpeed = 0.03 + (difficultyLevel - 1) * 0.008; // 速度上昇を緩やか
+      Enemy.prototype.baseHp = Math.ceil((40 + (difficultyLevel - 1) * 15) / 10) * 10; // HP上昇を調整
     }
 
     // リスタートボタンの処理を追加
