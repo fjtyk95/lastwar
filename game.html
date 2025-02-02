@@ -89,8 +89,9 @@
       border-radius: 10px;
       cursor: pointer;
       transition: background 0.3s;
-      margin-top: 20px;
+      margin: 20px auto;
       display: block;
+      width: fit-content;
     }
     #restartButton:hover {
       background: #ff6666;
@@ -333,9 +334,14 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // プレイヤーの描画
+      // プレイヤーを四角形で描画
       ctx.beginPath();
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+      ctx.rect(
+        player.x - player.radius, // 左上のX座標
+        player.y - player.radius, // 左上のY座標
+        player.radius * 2, // 幅
+        player.radius * 2  // 高さ
+      );
       ctx.fillStyle = 'blue';
       ctx.fill();
       ctx.closePath();
@@ -361,10 +367,11 @@
       const touchX = touch.clientX - rect.left;
       const touchY = touch.clientY - rect.top;
       
-      // タッチ判定範囲を広げる
-      const dx = touchX - player.x;
-      const dy = touchY - player.y;
-      if (dx * dx + dy * dy <= (player.radius * 1.5) * (player.radius * 1.5)) {
+      // 四角形の当たり判定
+      if (touchX >= player.x - player.radius * 1.5 && 
+          touchX <= player.x + player.radius * 1.5 &&
+          touchY >= player.y - player.radius * 1.5 &&
+          touchY <= player.y + player.radius * 1.5) {
         player.isDragging = true;
       }
     });
