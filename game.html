@@ -289,12 +289,13 @@
       document.getElementById('finalScore').textContent = 'Total Damage: ' + Math.floor(totalDamage);
     }
 
-    // 更新処理
+    // 更新処理を修正
     function update(deltaTime) {
       // 敵の移動と当たり判定
       for (let i = enemies.length - 1; i >= 0; i--) {
         enemies[i].update(deltaTime);
-        if (enemies[i].y - enemies[i].radius > canvas.height) {
+        // プレイヤーの高さ（最上部）に敵が到達したらゲームオーバー
+        if (enemies[i].y + enemies[i].radius >= player.y - player.radius) {
           showGameOver();
           return;
         }
