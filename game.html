@@ -44,7 +44,14 @@
     const enemySpawnInterval = 2000; // 2秒ごとに出現
     let gameOver = false;
     let score = 0;
-    let swipeEffects = []; // スワイプエフェクトの配列を追加
+    let swipeEffects = [];
+    let bullets = []; // 弾丸の配列を追加
+    let player = { // プレイヤーオブジェクトを追加
+      x: 0,
+      y: 0,
+      radius: 15,
+      isDragging: false
+    };
 
     // 敵オブジェクト
     class Enemy {
@@ -98,6 +105,37 @@
       }
     }
 
+    // 弾丸クラスを追加
+    class Bullet {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 5;
+        this.speed = 0.5; // px/ms
+        this.damage = 5;
+      }
+
+      update(deltaTime) {
+        this.y -= this.speed * deltaTime;
+        return this.y > -this.radius;
+      }
+
+      draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'yellow';
+        ctx.fill();
+        ctx.closePath();
+      }
+
+      checkCollision(enemy) {
+        const dx = this.x - enemy.x;
+        const dy = this.y - enemy.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        return distance < this.radius + enemy.radius;
+      }
+    }
+
     // 敵の出現
     function spawnEnemy() {
       const radius = Math.random() * 20 + 20; // 20～40px
@@ -125,98 +163,93 @@
     }
     requestAnimationFrame(gameLoop);
 
+    // プレイヤーの初期位置を設定
+    function resetPlayerPosition() {
+      player.x = canvas.width / 2;
+      player.y = canvas.height - 50;
+    }
+    resetPlayerPosition();
+    window.addEventListener('resize', resetPlayerPosition);
+
     // 更新処理
     function update(deltaTime) {
-      // 敵の移動
+      // 敵の移動と当たり判定
       for (let i = enemies.length - 1; i >= 0; i--) {
         enemies[i].update(deltaTime);
-        // 敵が画面下部に到達したらゲームオーバー
         if (enemies[i].y - enemies[i].radius > canvas.height) {
           gameOver = true;
           document.getElementById('gameOver').style.display = 'block';
         }
       }
-      // 撃破済みの敵を削除
+
+      // 弾丸の更新と当たり判定
+      bullets = bullets.filter(bullet => {
+        const isActive = bullet.update(deltaTime);
+        if (isActive) {
+          enemies.forEach(enemy => {
+            if (bullet.checkCollision(enemy)) {
+              enemy.hp -= bullet.damage;
+              return false;
+            }
+          });
+        }
+        return isActive;
+      });
+
+      // 新しい弾を発射（一定間隔で）
+      if (!gameOver && performance.now() % 200 < 16) { // 約200msごとに発射
+        bullets.push(new Bullet(player.x, player.y));
+      }
+
       enemies = enemies.filter(enemy => enemy.hp > 0);
-      
-      // スワイプエフェクトの更新
       swipeEffects = swipeEffects.filter(effect => effect.update());
     }
 
     // 描画処理
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      enemies.forEach(enemy => enemy.draw(ctx));
       
-      // スワイプエフェクトの描画
+      // プレイヤーの描画
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+      ctx.closePath();
+
+      // 弾丸の描画
+      bullets.forEach(bullet => bullet.draw(ctx));
+      
+      enemies.forEach(enemy => enemy.draw(ctx));
       swipeEffects.forEach(effect => effect.draw(ctx));
       
-      // スコア表示
       ctx.fillStyle = 'white';
       ctx.font = '20px sans-serif';
       ctx.fillText('Score: ' + score, 10, 30);
     }
 
-    // マウス操作によるスワイプ攻撃の実装を追加
-    let mouseStartX = null;
-    let mouseStartY = null;
-    let mouseStartTime = null;
-
+    // プレイヤーの移動制御
     canvas.addEventListener('mousedown', function(e) {
-      mouseStartX = e.clientX;
-      mouseStartY = e.clientY;
-      mouseStartTime = performance.now();
+      const dx = e.clientX - player.x;
+      const dy = e.clientY - player.y;
+      if (dx * dx + dy * dy <= player.radius * player.radius) {
+        player.isDragging = true;
+      }
+    });
+
+    canvas.addEventListener('mousemove', function(e) {
+      if (player.isDragging) {
+        player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, e.clientX));
+        player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, e.clientY));
+      }
     });
 
     canvas.addEventListener('mouseup', function(e) {
-      if (mouseStartX === null || mouseStartY === null || mouseStartTime === null) return;
-      
-      const mouseEndX = e.clientX;
-      const mouseEndY = e.clientY;
-      const mouseEndTime = performance.now();
-      
-      // スワイプエフェクトを追加
-      swipeEffects.push(new SwipeEffect(mouseStartX, mouseStartY, mouseEndX, mouseEndY));
-
-      // スワイプ速度（px/ms）
-      const dx = mouseEndX - mouseStartX;
-      const dy = mouseEndY - mouseStartY;
-      const distance = Math.hypot(dx, dy);
-      const swipeSpeed = distance / (mouseEndTime - mouseStartTime);
-
-      // ダメージ計算：基本ダメージ＋スワイプ速度に比例した加算値
-      const baseDamage = 10;
-      const multiplier = 200;
-      const damage = baseDamage + multiplier * swipeSpeed;
-
-      // スワイプの線分と各敵との衝突判定
-      enemies.forEach(enemy => {
-        if (lineIntersectsCircle(mouseStartX, mouseStartY, mouseEndX, mouseEndY, enemy.x, enemy.y, enemy.radius)) {
-          enemy.hp -= damage;
-          if (enemy.hp <= 0) {
-            score += 10;
-          }
-        }
-      });
-
-      // マウス情報をリセット
-      mouseStartX = mouseStartY = mouseStartTime = null;
+      player.isDragging = false;
     });
 
-    // 線分と円の衝突判定
-    function lineIntersectsCircle(x1, y1, x2, y2, cx, cy, radius) {
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-      const lengthSq = dx * dx + dy * dy;
-      // 円の中心と線分の始点からの内積から最短距離の係数tを算出
-      let t = ((cx - x1) * dx + (cy - y1) * dy) / lengthSq;
-      t = Math.max(0, Math.min(1, t));
-      const closestX = x1 + t * dx;
-      const closestY = y1 + t * dy;
-      const distX = cx - closestX;
-      const distY = cy - closestY;
-      return (distX * distX + distY * distY) <= radius * radius;
-    }
+    canvas.addEventListener('mouseleave', function(e) {
+      player.isDragging = false;
+    });
   </script>
 </body>
 </html>
