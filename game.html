@@ -156,10 +156,34 @@
       MULTI_SHOT: 'multiShot'
     };
 
-    // パワーアップ関連の変数を追加
-    let lastPowerUpTime = 0; // この変数が未定義だったのを修正
+    // 敵オブジェクトクラスを先に定義
+    class Enemy {
+      constructor(x, y, radius, hp, speedY) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.hp = hp;
+        this.speedY = speedY;
+      }
+      update(deltaTime) {
+        this.y += this.speedY * deltaTime;
+      }
+      draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+        ctx.closePath();
+        ctx.fillStyle = 'white';
+        ctx.font = '24px sans-serif';
+        ctx.fillText(Math.ceil(this.hp), this.x - 15, this.y + 8);
+      }
+    }
 
-    // 敵オブジェクトのプロトタイプに基本値を設定
+    // パワーアップ関連の変数を追加
+    let lastPowerUpTime = 0;
+
+    // 敵オブジェクトのプロトタイプに基本値を設定（クラス定義の後に移動）
     Enemy.prototype.baseSpeed = 0.05;
     Enemy.prototype.baseHp = 50;
 
@@ -220,31 +244,6 @@
 
     // パワーアップアイテムの出現間隔を調整
     const powerUpInterval = 20000; // 20秒ごとに出現（レアに）
-
-    // 敵オブジェクト
-    class Enemy {
-      constructor(x, y, radius, hp, speedY) {
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
-        this.hp = hp;
-        this.speedY = speedY; // px/ms
-      }
-      update(deltaTime) {
-        this.y += this.speedY * deltaTime;
-      }
-      draw(ctx) {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'red';
-        ctx.fill();
-        ctx.closePath();
-        // HPを表示（必要に応じて）
-        ctx.fillStyle = 'white';
-        ctx.font = '24px sans-serif'; // フォントサイズを大きく
-        ctx.fillText(Math.ceil(this.hp), this.x - 15, this.y + 8);
-      }
-    }
 
     // スワイプエフェクトクラスを追加
     class SwipeEffect {
