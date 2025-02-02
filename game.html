@@ -286,7 +286,7 @@
       }
     }
 
-    // 弾丸クラスを修正
+    // 弾丸クラスを簡略化（軌跡を削除）
     class Bullet {
       constructor(x, y) {
         this.x = x;
@@ -294,37 +294,14 @@
         this.radius = 12;
         this.speed = 0.8;
         this.damage = 10;
-        this.trail = [];
       }
 
       update(deltaTime) {
-        // 軌跡を記録
-        this.trail.push({x: this.x, y: this.y, alpha: 1});
-        if (this.trail.length > 5) {
-          this.trail.shift();
-        }
-
         this.y -= this.speed * deltaTime;
-        
-        // 軌跡のアルファ値を更新
-        this.trail.forEach((point, index) => {
-          point.alpha = index / this.trail.length;
-        });
-
         return this.y > -this.radius;
       }
 
       draw(ctx) {
-        // 軌跡を描画
-        this.trail.forEach(point => {
-          ctx.beginPath();
-          ctx.arc(point.x, point.y, this.radius * 0.8, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 255, 100, ${point.alpha * 0.3})`;
-          ctx.fill();
-          ctx.closePath();
-        });
-
-        // 弾本体
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
@@ -639,32 +616,36 @@
 
     // パワーアップエフェクトクラスを改善
     class PowerUpEffect {
-      constructor(x, y, type) {
+      constructor(x, y, type, value) {
         this.x = x;
         this.y = y;
         this.type = type;
+        this.value = value; // パワーアップ後の値
         this.radius = 0;
-        this.maxRadius = 150;
+        this.maxRadius = 200;
         this.alpha = 1.0;
         this.particles = [];
         this.color = type === PowerUpType.DAMAGE ? '#ff3333' : '#33ff33';
+        this.lifeTime = 0;
+        this.maxLife = 1500; // 1.5秒
         
         // パーティクルを生成
-        for (let i = 0; i < 12; i++) {
-          const angle = (i / 12) * Math.PI * 2;
+        for (let i = 0; i < 16; i++) {
+          const angle = (i / 16) * Math.PI * 2;
           this.particles.push({
             x: x,
             y: y,
             angle: angle,
-            speed: Math.random() * 0.3 + 0.2,
-            size: Math.random() * 10 + 5
+            speed: Math.random() * 0.4 + 0.3,
+            size: Math.random() * 12 + 8
           });
         }
       }
 
       update(deltaTime) {
-        this.radius += deltaTime * 0.4;
-        this.alpha = Math.max(0, 1 - this.radius / this.maxRadius);
+        this.lifeTime += deltaTime;
+        this.radius += deltaTime * 0.5;
+        this.alpha = Math.max(0, 1 - this.lifeTime / this.maxLife);
 
         // パーティクルの更新
         this.particles.forEach(particle => {
@@ -672,7 +653,7 @@
           particle.y += Math.sin(particle.angle) * particle.speed * deltaTime;
         });
 
-        return this.alpha > 0;
+        return this.lifeTime < this.maxLife;
       }
 
       draw(ctx) {
@@ -680,7 +661,7 @@
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.strokeStyle = `${this.color}${Math.floor(this.alpha * 255).toString(16).padStart(2, '0')}`;
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 8;
         ctx.stroke();
         ctx.closePath();
 
@@ -693,15 +674,16 @@
           ctx.closePath();
         });
 
-        // 中心の光
-        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 40 * this.alpha);
-        gradient.addColorStop(0, `${this.color}ff`);
-        gradient.addColorStop(1, `${this.color}00`);
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 40 * this.alpha, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-        ctx.closePath();
+        // パワーアップ情報の表示
+        const text = this.type === PowerUpType.DAMAGE ? 
+          `攻撃力 ${this.value}倍！` : 
+          `${this.value}連射！`;
+        
+        ctx.font = `bold ${Math.floor(40 * this.alpha)}px sans-serif`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, this.x, this.y - 60);
       }
     }
 
@@ -727,12 +709,22 @@
     if (powerUp.hp <= 0) {
       if (powerUp.type === PowerUpType.DAMAGE) {
         player.powerLevel = Math.min(5, player.powerLevel + 1);
-        powerUpEffects.push(new PowerUpEffect(player.x, player.y, PowerUpType.DAMAGE));
+        powerUpEffects.push(new PowerUpEffect(
+          powerUp.x,
+          powerUp.y,
+          PowerUpType.DAMAGE,
+          player.powerLevel
+        ));
         showPowerUpNotification(PowerUpType.DAMAGE);
       } else {
         player.shotCount = Math.min(player.maxShotCount, player.shotCount + 1);
         player.width = player.baseWidth * player.shotCount;
-        powerUpEffects.push(new PowerUpEffect(player.x, player.y, PowerUpType.MULTI_SHOT));
+        powerUpEffects.push(new PowerUpEffect(
+          powerUp.x,
+          powerUp.y,
+          PowerUpType.MULTI_SHOT,
+          player.shotCount
+        ));
         showPowerUpNotification(PowerUpType.MULTI_SHOT);
       }
       powerUps = powerUps.filter(p => p !== powerUp);
