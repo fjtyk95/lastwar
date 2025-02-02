@@ -177,9 +177,9 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radius = 20; // 弾のサイズも大きく
+        this.radius = 20; // 弾のサイズ
         this.speed = 0.5;
-        this.damage = 8; // ダメージも増加
+        this.damage = 10; // ダメージを10に固定
       }
 
       update(deltaTime) {
@@ -208,8 +208,8 @@
       const radius = Math.random() * 50 + 50;
       const x = Math.random() * (canvas.width - 2 * radius) + radius;
       const y = -radius;
-      const hp = Enemy.prototype.baseHp * (Math.random() * 0.4 + 0.8); // ±20%のばらつき
-      const speedY = Enemy.prototype.baseSpeed * (Math.random() * 0.4 + 0.8); // ±20%のばらつき
+      const hp = 30; // 初期HPを30に設定（3発で撃破）
+      const speedY = Math.random() * 0.05 + 0.05;
       enemies.push(new Enemy(x, y, radius, hp, speedY));
     }
 
@@ -365,20 +365,18 @@
       requestAnimationFrame(gameLoop);
     });
 
-    // 難易度調整関数を追加
+    // 難易度調整関数を修正
     function updateDifficulty(deltaTime) {
       gameTime += deltaTime;
-      // 30秒ごとに難易度上昇
       difficultyLevel = Math.floor(gameTime / 30000) + 1;
       
-      // 難易度に応じてゲームパラメータを調整
-      const baseSpawnInterval = 2000; // 基本スポーン間隔
-      const minSpawnInterval = 500; // 最小スポーン間隔
+      const baseSpawnInterval = 2000;
+      const minSpawnInterval = 500;
       enemySpawnInterval = Math.max(baseSpawnInterval - (difficultyLevel - 1) * 300, minSpawnInterval);
       
-      // 敵の強化
+      // 敵の強化（HPを10の倍数で増加）
       Enemy.prototype.baseSpeed = 0.05 + (difficultyLevel - 1) * 0.01;
-      Enemy.prototype.baseHp = 50 + (difficultyLevel - 1) * 10;
+      Enemy.prototype.baseHp = 30 + (difficultyLevel - 1) * 10; // 30から開始して10ずつ増加
     }
   </script>
 </body>
