@@ -157,50 +157,50 @@
       ctx.fillText('Score: ' + score, 10, 30);
     }
 
-    // タッチ操作によるスワイプ攻撃の実装
-    let touchStartX = null;
-    let touchStartY = null;
-    let touchStartTime = null;
+    // マウス操作によるスワイプ攻撃の実装を追加
+    let mouseStartX = null;
+    let mouseStartY = null;
+    let mouseStartTime = null;
 
-    canvas.addEventListener('touchstart', function(e) {
-      const touch = e.touches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-      touchStartTime = e.timeStamp;
+    canvas.addEventListener('mousedown', function(e) {
+      mouseStartX = e.clientX;
+      mouseStartY = e.clientY;
+      mouseStartTime = performance.now();
     });
 
-    canvas.addEventListener('touchend', function(e) {
-      if (touchStartX === null || touchStartY === null || touchStartTime === null) return;
-      const touch = e.changedTouches[0];
-      const touchEndX = touch.clientX;
-      const touchEndY = touch.clientY;
-      const touchEndTime = e.timeStamp;
+    canvas.addEventListener('mouseup', function(e) {
+      if (mouseStartX === null || mouseStartY === null || mouseStartTime === null) return;
+      
+      const mouseEndX = e.clientX;
+      const mouseEndY = e.clientY;
+      const mouseEndTime = performance.now();
       
       // スワイプエフェクトを追加
-      swipeEffects.push(new SwipeEffect(touchStartX, touchStartY, touchEndX, touchEndY));
+      swipeEffects.push(new SwipeEffect(mouseStartX, mouseStartY, mouseEndX, mouseEndY));
 
       // スワイプ速度（px/ms）
-      const dx = touchEndX - touchStartX;
-      const dy = touchEndY - touchStartY;
+      const dx = mouseEndX - mouseStartX;
+      const dy = mouseEndY - mouseStartY;
       const distance = Math.hypot(dx, dy);
-      const swipeSpeed = distance / (touchEndTime - touchStartTime);
+      const swipeSpeed = distance / (mouseEndTime - mouseStartTime);
 
       // ダメージ計算：基本ダメージ＋スワイプ速度に比例した加算値
       const baseDamage = 10;
-      const multiplier = 200; // 調整可能
+      const multiplier = 200;
       const damage = baseDamage + multiplier * swipeSpeed;
 
       // スワイプの線分と各敵との衝突判定
       enemies.forEach(enemy => {
-        if (lineIntersectsCircle(touchStartX, touchStartY, touchEndX, touchEndY, enemy.x, enemy.y, enemy.radius)) {
+        if (lineIntersectsCircle(mouseStartX, mouseStartY, mouseEndX, mouseEndY, enemy.x, enemy.y, enemy.radius)) {
           enemy.hp -= damage;
           if (enemy.hp <= 0) {
-            score += 10; // 敵撃破でスコア加算
+            score += 10;
           }
         }
       });
-      // タッチ情報をリセット
-      touchStartX = touchStartY = touchStartTime = null;
+
+      // マウス情報をリセット
+      mouseStartX = mouseStartY = mouseStartTime = null;
     });
 
     // 線分と円の衝突判定
