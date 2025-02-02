@@ -156,6 +156,13 @@
       MULTI_SHOT: 'multiShot'
     };
 
+    // パワーアップ関連の変数を追加
+    let lastPowerUpTime = 0; // この変数が未定義だったのを修正
+
+    // 敵オブジェクトのプロトタイプに基本値を設定
+    Enemy.prototype.baseSpeed = 0.05;
+    Enemy.prototype.baseHp = 50;
+
     // パワーアップアイテムクラスを調整
     class PowerUp {
       constructor(x, y) {
@@ -271,8 +278,8 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radius = 20;
-        this.speed = 0.6; // 弾速を上げる
+        this.radius = 15; // サイズを少し小さく
+        this.speed = 0.8; // 弾速を上げる
         this.damage = 10;
       }
 
@@ -289,11 +296,11 @@
         ctx.closePath();
       }
 
-      checkCollision(enemy) {
-        const dx = this.x - enemy.x;
-        const dy = this.y - enemy.y;
+      checkCollision(target) {
+        const dx = this.x - target.x;
+        const dy = this.y - target.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        return distance < this.radius + enemy.radius;
+        return distance < this.radius + target.radius;
       }
     }
 
@@ -361,21 +368,41 @@
 
     // 更新処理を修正
     function update(deltaTime) {
+      // 敵の移動と当たり判定
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        enemies[i].update(deltaTime);
+        if (enemies[i].y + enemies[i].radius >= player.y - player.height/2) {
+          showGameOver();
+          return;
+        }
+      }
+
       // パワーアップアイテムの出現
-      if (performance.now() - lastPowerUpTime > powerUpInterval) {
-        const x = Math.random() * (canvas.width - 60) + 30;
-        powerUps.push(new PowerUp(x, -30));
+      if (!gameOver && !isPaused && performance.now() - lastPowerUpTime > powerUpInterval) {
+        const x = Math.random() * (canvas.width - 80) + 40;
+        powerUps.push(new PowerUp(x, -40));
         lastPowerUpTime = performance.now();
+      }
+
+      // 弾の発射（一定間隔で）
+      if (!gameOver && !isPaused && performance.now() % 200 < 16) {
+        const spread = player.width * 0.7;
+        const offset = (player.shotCount - 1) * spread / 2;
+        for (let i = 0; i < player.shotCount; i++) {
+          const bulletX = player.x - offset + i * spread;
+          const bullet = new Bullet(bulletX, player.y - player.height/2);
+          bullet.damage = 10 * player.powerLevel;
+          bullets.push(bullet);
+        }
       }
 
       // パワーアップアイテムの更新
       powerUps = powerUps.filter(powerUp => {
         powerUp.update(deltaTime);
-        
-        // プレイヤーとの衝突判定
         if (powerUp.y + powerUp.radius >= player.y - player.height/2) {
-          if (powerUp.hp > 0) {
-            // HPが残っている場合、プレイヤーの攻撃力が下がる
+          const hitX = powerUp.x >= player.x - player.width/2 && 
+                      powerUp.x <= player.x + player.width/2;
+          if (hitX && powerUp.hp > 0) {
             player.powerLevel = Math.max(1, player.powerLevel - 1);
             player.shotCount = Math.max(1, player.shotCount - 1);
             player.width = player.baseWidth * player.shotCount;
@@ -385,19 +412,7 @@
         return powerUp.y < canvas.height + powerUp.radius;
       });
 
-      // 弾の発射処理を修正（複数発射対応）
-      if (!gameOver && !isPaused && performance.now() % 250 < 16) { // 250msに1回に変更
-        const spread = player.width * 0.8;
-        const offset = (player.shotCount - 1) * spread / 2;
-        for (let i = 0; i < player.shotCount; i++) {
-          const bulletX = player.x - offset + i * spread;
-          const bullet = new Bullet(bulletX, player.y);
-          bullet.damage = 10 * player.powerLevel;
-          bullets.push(bullet);
-        }
-      }
-
-      // 弾とパワーアップアイテムの当たり判定
+      // 弾の更新と当たり判定
       bullets = bullets.filter(bullet => {
         let isActive = bullet.update(deltaTime);
         if (isActive) {
@@ -413,38 +428,29 @@
             }
           }
           // パワーアップアイテムとの当たり判定
-          for (let powerUp of powerUps) {
-            if (bullet.checkCollision(powerUp)) {
-              powerUp.hp -= bullet.damage;
-              if (powerUp.hp <= 0) {
-                // パワーアップ効果の適用
-                if (powerUp.type === PowerUpType.DAMAGE) {
-                  player.powerLevel = Math.min(5, player.powerLevel + 1); // 最大5倍
-                } else {
-                  player.shotCount = Math.min(player.maxShotCount, player.shotCount + 1);
-                  player.width = player.baseWidth * player.shotCount;
+          if (isActive) {
+            for (let powerUp of powerUps) {
+              if (bullet.checkCollision(powerUp)) {
+                powerUp.hp -= bullet.damage;
+                if (powerUp.hp <= 0) {
+                  if (powerUp.type === PowerUpType.DAMAGE) {
+                    player.powerLevel = Math.min(5, player.powerLevel + 1);
+                  } else {
+                    player.shotCount = Math.min(player.maxShotCount, player.shotCount + 1);
+                    player.width = player.baseWidth * player.shotCount;
+                  }
+                  powerUps = powerUps.filter(p => p !== powerUp);
                 }
-                powerUps = powerUps.filter(p => p !== powerUp);
+                isActive = false;
+                break;
               }
-              isActive = false;
-              break;
             }
           }
         }
         return isActive;
       });
 
-      // 敵の移動と当たり判定
-      for (let i = enemies.length - 1; i >= 0; i--) {
-        enemies[i].update(deltaTime);
-        // プレイヤーの高さ（最上部）に敵が到達したらゲームオーバー
-        if (enemies[i].y + enemies[i].radius >= player.y - player.height/2) {
-          showGameOver();
-          return;
-        }
-      }
-
-      // HPが0以下になった敵のみを削除
+      // HPが0以下になった敵を削除
       enemies = enemies.filter(enemy => enemy.hp > 0);
       swipeEffects = swipeEffects.filter(effect => effect.update());
     }
