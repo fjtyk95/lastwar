@@ -39,31 +39,6 @@
       align-items: center;
       justify-content: center;
     }
-    #pauseMenu {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.8);
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      display: none;
-      z-index: 200;
-    }
-    #pauseMenu button {
-      background: #4CAF50;
-      border: none;
-      padding: 10px 20px;
-      color: white;
-      font-size: 20px;
-      margin: 10px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #pauseMenu button:hover {
-      background: #45a049;
-    }
     #score {
       position: absolute;
       top: 20px;
@@ -77,12 +52,8 @@
 <body>
   <canvas id="gameCanvas"></canvas>
   <button id="pauseButton">⏸</button>
-  <div id="pauseMenu">
-    <h2 style="color: white; margin-bottom: 20px;">一時停止中</h2>
-    <button id="resumeButton">再開</button>
-  </div>
+  <div id="score">Damage: 0</div>
   <div id="gameOver">Game Over</div>
-  <div id="score">Bullets: 0</div>
   <script>
     // キャンバス初期化
     const canvas = document.getElementById('gameCanvas');
@@ -99,10 +70,9 @@
     let lastEnemySpawnTime = 0;
     const enemySpawnInterval = 2000; // 2秒ごとに出現
     let gameOver = false;
-    let score = 0;
+    let totalDamage = 0; // 与えたダメージの合計
     let swipeEffects = [];
     let bullets = []; // 弾丸の配列を追加
-    let bulletsFired = 0; // 発射した弾数をカウント
     let player = {
       x: 0,
       y: 0,
@@ -204,21 +174,17 @@
       enemies.push(new Enemy(x, y, radius, hp, speedY));
     }
 
-    // ポーズ関連の処理を追加
+    // ポーズ関連の処理を簡略化
     const pauseButton = document.getElementById('pauseButton');
-    const pauseMenu = document.getElementById('pauseMenu');
-    const resumeButton = document.getElementById('resumeButton');
 
     pauseButton.addEventListener('click', function() {
-      isPaused = true;
-      pauseMenu.style.display = 'block';
-    });
-
-    resumeButton.addEventListener('click', function() {
-      isPaused = false;
-      pauseMenu.style.display = 'none';
-      lastFrameTime = performance.now(); // フレーム時間をリセット
-      requestAnimationFrame(gameLoop);
+      isPaused = !isPaused; // 状態を反転
+      pauseButton.textContent = isPaused ? '▶' : '⏸'; // ボタンの表示を切り替え
+      
+      if (!isPaused) {
+        lastFrameTime = performance.now(); // フレーム時間をリセット
+        requestAnimationFrame(gameLoop);
+      }
     });
 
     // ゲームループを修正
@@ -270,20 +236,16 @@
         if (isActive) {
           enemies.forEach(enemy => {
             if (bullet.checkCollision(enemy)) {
+              const damage = Math.min(bullet.damage, enemy.hp); // 実際に与えたダメージ
               enemy.hp -= bullet.damage;
+              totalDamage += damage; // ダメージをスコアに加算
+              document.getElementById('score').textContent = 'Damage: ' + Math.floor(totalDamage);
               return false;
             }
           });
         }
         return isActive;
       });
-
-      // 新しい弾を発射（一定間隔で）
-      if (!gameOver && !isPaused && performance.now() % 200 < 16) {
-        bullets.push(new Bullet(player.x, player.y));
-        bulletsFired++; // 弾を発射するたびにカウントを増やす
-        document.getElementById('score').textContent = 'Bullets: ' + bulletsFired;
-      }
 
       enemies = enemies.filter(enemy => enemy.hp > 0);
       swipeEffects = swipeEffects.filter(effect => effect.update());
