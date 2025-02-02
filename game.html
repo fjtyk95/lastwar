@@ -49,7 +49,7 @@
     let player = { // プレイヤーオブジェクトを追加
       x: 0,
       y: 0,
-      radius: 30, // プレイヤーサイズを2倍に
+      radius: 45, // 親指サイズに調整（約90pxの直径）
       isDragging: false
     };
 
@@ -110,7 +110,7 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radius = 10; // 弾のサイズを2倍に
+        this.radius = 15; // 弾のサイズも少し大きく
         this.speed = 0.5;
         this.damage = 5;
       }
@@ -138,10 +138,10 @@
 
     // 敵の出現を修正
     function spawnEnemy() {
-      const radius = Math.random() * 30 + 30; // 30～60pxに変更
+      const radius = Math.random() * 40 + 40; // 40～80pxに変更
       const x = Math.random() * (canvas.width - 2 * radius) + radius;
       const y = -radius;
-      const hp = 30;
+      const hp = 40; // HPも少し増加
       const speedY = Math.random() * 0.05 + 0.05;
       enemies.push(new Enemy(x, y, radius, hp, speedY));
     }
@@ -166,7 +166,7 @@
     // プレイヤーの初期位置を設定
     function resetPlayerPosition() {
       player.x = canvas.width / 2;
-      player.y = canvas.height - 50;
+      player.y = canvas.height - 100; // 画面下部の固定位置
     }
     resetPlayerPosition();
     window.addEventListener('resize', resetPlayerPosition);
@@ -234,7 +234,7 @@
       ctx.fillText('Score: ' + score, 20, 50);
     }
 
-    // タッチ操作のサポートを追加
+    // タッチ操作のサポートを修正
     canvas.addEventListener('touchstart', function(e) {
       e.preventDefault();
       const touch = e.touches[0];
@@ -254,9 +254,8 @@
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
         const touchX = touch.clientX - rect.left;
-        const touchY = touch.clientY - rect.top;
+        // X座標のみ更新（Y座標は固定）
         player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, touchX));
-        player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, touchY));
       }
     });
 
