@@ -127,18 +127,23 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 60px;
+      height: 70px;
       background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(5px);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 20px;
+      padding: 0 24px;
       z-index: 1000;
+      box-sizing: border-box;
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
     }
     .logo {
       color: white;
-      font-size: 24px;
+      font-size: 28px;
       font-weight: bold;
       text-decoration: none;
       display: flex;
@@ -146,7 +151,7 @@
       gap: 10px;
     }
     .logo img {
-      height: 40px;
+      height: 48px;
       width: auto;
     }
     nav ul {
@@ -159,8 +164,10 @@
     nav a {
       color: white;
       text-decoration: none;
-      font-size: 16px;
+      font-size: 20px;
+      padding: 12px 20px;
       transition: color 0.3s;
+      display: inline-block;
     }
     nav a:hover {
       color: #ff4444;
@@ -172,28 +179,31 @@
       right: 0;
       background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(5px);
-      padding: 15px 20px;
+      padding: 20px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       z-index: 1000;
+      box-sizing: border-box;
     }
     .footer-links {
       display: flex;
-      gap: 20px;
+      gap: 24px;
     }
     .footer-links a {
       color: #cccccc;
       text-decoration: none;
-      font-size: 14px;
+      font-size: 18px;
+      padding: 12px 16px;
       transition: color 0.3s;
+      display: inline-block;
     }
     .footer-links a:hover {
       color: white;
     }
     .copyright {
       color: #cccccc;
-      font-size: 14px;
+      font-size: 16px;
     }
     #titleScreen {
       padding: 60px 0;
@@ -207,31 +217,61 @@
       opacity: 0;
       visibility: hidden;
     }
+
+    @media (max-width: 768px) {
+      header {
+        height: 80px;
+        padding: 0 20px;
+      }
+
+      .logo {
+        font-size: 24px;
+      }
+
+      .logo img {
+        height: 42px;
+      }
+
+      nav a {
+        font-size: 22px;
+        padding: 15px 20px;
+      }
+
+      footer {
+        padding: 24px 20px;
+      }
+
+      .footer-links a {
+        font-size: 20px;
+        padding: 15px 20px;
+      }
+
+      .copyright {
+        font-size: 18px;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
-    <a href="#" class="logo">
-      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff4444'%3E%3Cpath d='M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99z'/%3E%3C/svg%3E" alt="Logo">
-      SWIPE ATTACK
-    </a>
-    <nav>
-      <ul>
-        <li><a href="#" onclick="showRanking()">ランキング</a></li>
-        <li><a href="#" onclick="showHelp()">遊び方</a></li>
-        <li><a href="#" onclick="showSettings()">設定</a></li>
-      </ul>
-    </nav>
+    <div class="header-content">
+      <a href="game.html" class="logo">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff4444'%3E%3Cpath d='M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99z'/%3E%3C/svg%3E" alt="Logo">
+        SWIPE ATTACK
+      </a>
+      <nav>
+        <ul>
+          <li><a href="howto.html">遊び方</a></li>
+        </ul>
+      </nav>
+    </div>
   </header>
   <footer>
     <div class="footer-links">
-      <a href="#" onclick="showTerms()">利用規約</a>
-      <a href="#" onclick="showPrivacy()">プライバシーポリシー</a>
-      <a href="#" onclick="showContact()">お問い合わせ</a>
+      <a href="terms.html">利用規約</a>
+      <a href="mailto:fjtyk95@gmail.com">お問い合わせ</a>
     </div>
-    <div class="copyright">
-      © 2024 SWIPE ATTACK All Rights Reserved.
-    </div>
+    <div class="copyright">© 2024 SWIPE ATTACK - Created by Yuki Fujita</div>
   </footer>
   <canvas id="gameCanvas"></canvas>
   <button id="pauseButton">⏸</button>
