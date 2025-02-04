@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>遊び方 - SWIPE ATTACK</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+
+    /* terms.htmlと同じスタイルを継承 */
+    /* ... 基本的なスタイル ... */
+
+    .howto-section {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2em;
+      border-radius: 10px;
+      margin-bottom: 2em;
+      backdrop-filter: blur(5px);
+    }
+
+    .howto-image {
+      width: 100%;
+      max-width: 500px;
+      margin: 20px auto;
+      display: block;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+    }
+
+    .key-point {
+      background: rgba(255, 68, 68, 0.1);
+      padding: 1em;
+      border-radius: 5px;
+      margin: 1em 0;
+      border-left: 4px solid #ff4444;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <a href="game.html" class="logo">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff4444'%3E%3Cpath d='M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99z'/%3E%3C/svg%3E" alt="Logo">
+        SWIPE ATTACK
+      </a>
+      <nav>
+        <ul>
+          <li><a href="howto.html">遊び方</a></li>
+          <li><a href="game.html" class="back-button">ゲームに戻る</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1>遊び方</h1>
+
+    <section class="howto-section">
+      <h2>基本操作</h2>
+      <p>マウスやタッチ操作で青い自機を動かし、上から降ってくる赤い敵を撃破していきます。</p>
+      <div class="key-point">
+        <p>💡 自機は画面をドラッグすることで移動できます</p>
+      </div>
+    </section>
+
+    <section class="howto-section">
+      <h2>パワーアップアイテム</h2>
+      <p>敵を倒すと時々出現する光る球体がパワーアップアイテムです。</p>
+      <ul>
+        <li>赤いアイテム：攻撃力が上昇（最大5倍）</li>
+        <li>緑のアイテム：攻撃列が増加（最大4列）</li>
+      </ul>
+      <div class="key-point">
+        <p>⚠️ パワーアップアイテムが自機に直接当たると、攻撃力が下がってしまいます！</p>
+      </div>
+    </section>
+
+    <section class="howto-section">
+      <h2>スコアと難易度</h2>
+      <p>敵にダメージを与えるとスコアが上昇します。スコアが上がるにつれて：</p>
+      <ul>
+        <li>敵の出現頻度が上昇</li>
+        <li>敵のHPと移動速度が上昇</li>
+        <li>パワーアップアイテムのHPも上昇</li>
+      </ul>
+      <div class="key-point">
+        <p>💡 より高いスコアを目指して、パワーアップを有効活用しましょう！</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <a href="terms.html">利用規約</a>
+      <a href="mailto:fjtyk95@gmail.com">お問い合わせ</a>
+    </div>
+    <div class="copyright">© 2024 SWIPE ATTACK - Created by Yuki Fujita</div>
+  </footer>
+</body>
+</html> 

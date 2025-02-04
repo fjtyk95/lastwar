@@ -198,6 +198,15 @@
     #titleScreen {
       padding: 60px 0;  // ヘッダーの高さ分余白を追加
     }
+    header, footer {
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+
+    .game-started header,
+    .game-started footer {
+      opacity: 0;
+      visibility: hidden;
+    }
   </style>
 </head>
 <body>
@@ -499,6 +508,7 @@
       gameOver = true;
       document.getElementById('gameOver').style.display = 'block';
       document.getElementById('finalScore').textContent = 'Total Damage: ' + Math.floor(totalDamage);
+      document.body.classList.remove('game-started');
     }
 
     // 更新処理を修正
@@ -631,30 +641,12 @@
 
     // スタートボタンの処理を修正
     document.getElementById('startButton').addEventListener('click', function() {
-      // ゲーム状態のリセット
-      enemies = [];
-      bullets = [];
-      totalDamage = 0;
-      gameOver = false;
-      isPaused = false;
-      gameTime = 0;
-      difficultyLevel = 1;
-      lastEnemySpawnTime = 0;
-      
-      // スコア表示のリセット
-      document.getElementById('score').textContent = 'Damage: 0';
-      document.getElementById('gameOver').style.display = 'none';
-      
-      // プレイヤーの位置をリセット
-      resetPlayerPosition();
-      
-      // タイトル画面を非表示
-      document.getElementById('titleScreen').style.display = 'none';
-      
-      // ゲーム開始
-      isGameStarted = true;
-      lastFrameTime = performance.now();
-      requestAnimationFrame(gameLoop);
+      if (!isGameStarted) {
+        isGameStarted = true;
+        document.getElementById('titleScreen').style.display = 'none';
+        document.body.classList.add('game-started');
+        resetGame();
+      }
     });
 
     // 難易度調整を強化
@@ -909,6 +901,8 @@
       document.getElementById('score').textContent = 'Damage: 0';
       document.getElementById('powerUpNotification').style.opacity = '0';
       document.getElementById('powerUpNotification').style.transform = 'translate(-50%, -50%) scale(1)';
+      document.getElementById('gameOver').style.display = 'none';
+      document.body.classList.remove('game-started');
     }
 
     function showRanking() {
