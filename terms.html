@@ -25,6 +25,7 @@
       width: 100%;
       top: 0;
       z-index: 1000;
+      box-sizing: border-box;
     }
 
     .header-content {
@@ -53,10 +54,10 @@
       background: #ff4444;
       color: white;
       border: none;
-      padding: 8px 20px;
+      padding: 12px 24px;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 18px;
       transition: background 0.3s;
     }
 
@@ -108,38 +109,74 @@
     footer {
       background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(5px);
-      padding: 1rem;
+      padding: 1.5rem;
       text-align: center;
       position: fixed;
       bottom: 0;
       width: 100%;
+      z-index: 1000;
+      box-sizing: border-box;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: #cccccc;
+      text-decoration: none;
+      font-size: 16px;
+      transition: color 0.3s;
+      padding: 8px 12px;
     }
 
     .copyright {
-      font-size: 14px;
       color: #cccccc;
+      font-size: 16px;
+      margin-top: 12px;
     }
 
     @media (max-width: 768px) {
-      main {
-        padding: 15px;
-        margin-top: 80px;
-      }
-
-      section {
-        padding: 1.5em;
-      }
-
-      h1 {
-        font-size: 2em;
+      header {
+        padding: 1.2rem;
       }
 
       .logo {
-        font-size: 20px;
+        font-size: 22px;
       }
 
       .logo img {
-        height: 30px;
+        height: 36px;
+      }
+
+      .back-button {
+        padding: 14px 28px;
+        font-size: 20px;
+      }
+
+      footer {
+        padding: 2rem 1rem;
+      }
+
+      .footer-links {
+        gap: 16px;
+      }
+
+      .footer-links a {
+        font-size: 18px;
+        padding: 12px 16px;
+      }
+
+      .copyright {
+        font-size: 16px;
+        margin-top: 16px;
+      }
+
+      main {
+        margin-bottom: 180px;
       }
     }
   </style>
@@ -238,6 +275,10 @@
   </main>
 
   <footer>
+    <div class="footer-links">
+      <a href="terms.html">利用規約</a>
+      <a href="privacy.html">プライバシーポリシー</a>
+    </div>
     <div class="copyright">© 2024 SWIPE ATTACK All Rights Reserved.</div>
   </footer>
 </body>
