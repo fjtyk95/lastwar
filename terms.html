@@ -182,20 +182,7 @@
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-content">
-      <a href="game.html" class="logo">
-        <img src="logo.webp" alt="Logo">
-        Last Woo!
-      </a>
-      <nav>
-        <ul>
-          <li><a href="howto.html">遊び方</a></li>
-          <li><a href="game.html" class="back-button">ゲームに戻る</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
+  <div id="header-placeholder"></div>
 
   <main>
     <h1>利用規約</h1>
@@ -279,12 +266,20 @@
     </section>
   </main>
 
-  <footer>
-    <div class="footer-links">
-      <a href="terms.html">利用規約</a>
-      <a href="mailto:fjtyk95@gmail.com">お問い合わせ</a>
-    </div>
-    <div class="copyright">© 2024 Last Woo! - Created by Yuki Fujita</div>
-  </footer>
+  <div id="footer-placeholder"></div>
+
+  <script>
+    fetch('header.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('header-placeholder').innerHTML = data;
+      });
+
+    fetch('footer.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('footer-placeholder').innerHTML = data;
+      });
+  </script>
 </body>
 </html> 

@@ -253,26 +253,7 @@
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-content">
-      <a href="game.html" class="logo">
-        <img src="logo.webp" alt="Logo">
-        Last Woo!
-      </a>
-      <nav>
-        <ul>
-          <li><a href="howto.html">遊び方</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-  <footer>
-    <div class="footer-links">
-      <a href="terms.html">利用規約</a>
-      <a href="mailto:fjtyk95@gmail.com">お問い合わせ</a>
-    </div>
-    <div class="copyright">© 2024 Last Woo! - Created by Yuki Fujita</div>
-  </footer>
+  <div id="header-placeholder"></div>
   <canvas id="gameCanvas"></canvas>
   <button id="pauseButton">⏸</button>
   <div id="score">Damage: 0</div>
@@ -287,7 +268,21 @@
     <button id="startButton">スタート</button>
   </div>
   <div id="powerUpNotification"></div>
+  <div id="footer-placeholder"></div>
   <script>
+    // ヘッダーとフッターの読み込み
+    fetch('header.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('header-placeholder').innerHTML = data;
+      });
+
+    fetch('footer.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('footer-placeholder').innerHTML = data;
+      });
+
     // キャンバス初期化
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
